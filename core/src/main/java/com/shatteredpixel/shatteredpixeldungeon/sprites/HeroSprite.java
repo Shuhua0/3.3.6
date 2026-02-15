@@ -145,13 +145,17 @@ public class HeroSprite extends CharSprite {
 		if (run != null) run.delay = 1f / speed / RUN_FRAMERATE;
 	}
 	
-	public static TextureFilm tiers() {
-		if (tiers == null) {
-			SmartTexture texture = TextureCache.get( Assets.Sprites.MAGE );
-			tiers = new TextureFilm( texture, texture.width, FRAME_HEIGHT );
-		}
-		return tiers;
-	}
+public static TextureFilm tiers() {
+        if (tiers == null) {
+            SmartTexture texture = TextureCache.get( Assets.Sprites.MAGE );
+            tiers = new TextureFilm( texture, texture.width, FRAME_HEIGHT );
+        }
+        return tiers;
+    }
+
+    public static TextureFilm tiers(com.watabou.gltextures.SmartTexture texture) {
+        return new TextureFilm( texture, texture.width, FRAME_HEIGHT );
+    }
 
 public static Image avatar( Hero hero ){
         HeroClass cl = (hero.buff(HeroDisguise.class) != null) ? 

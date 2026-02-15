@@ -158,16 +158,16 @@ public class HeroSprite extends CharSprite {
         return new TextureFilm( texture, texture.width, FRAME_HEIGHT );
     }
 
-    public static Image avatar( Hero hero ){
+public static Image avatar( Hero hero ){
         HeroClass cl = (hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HeroDisguise.class) != null) ? 
             hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HeroDisguise.class).getDisguise() : hero.heroClass;
 
         Image img = avatar(cl, hero.tier());
         
-        img.origin.set(0, 0); 
-        // 0.25배 축소 후 UI 칸에 맞추기 위한 미세 좌표
+        // 기준점을 중앙으로 잡고 좌표를 0으로 때려박으면 무조건 보입니다.
+        img.origin.set(FRAME_WIDTH / 2f, FRAME_HEIGHT / 2f); 
         img.x = 0; 
-        img.y = -2; 
+        img.y = 0; 
         
         return img;
     }

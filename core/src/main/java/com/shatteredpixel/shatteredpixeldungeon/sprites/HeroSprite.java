@@ -158,20 +158,18 @@ public static TextureFilm tiers() {
     }
 
 public static Image avatar( Hero hero ){
-        HeroClass cl = (hero.buff(HeroDisguise.class) != null) ? 
-            hero.buff(HeroDisguise.class).getDisguise() : hero.heroClass;
+    HeroClass cl = (hero.buff(HeroDisguise.class) != null) ? 
+        hero.buff(HeroDisguise.class).getDisguise() : hero.heroClass;
 
-        Image img = avatar(cl, hero.tier());
-        
-        // [수정] origin을 0으로 만들어야 x, y 좌표 이동이 정확하게 먹힙니다.
-        img.origin.set(0, 0); 
-        
-        // 이제 이 마이너스 값들이 확실하게 캐릭터를 왼쪽 위로 보낼 겁니다.
-        img.x = -15; 
-        img.y = -25; 
-        
-        return img;
-    }
+    Image img = avatar(cl, hero.tier());
+    
+    // origin을 0으로 잡았다면, x와 y도 0 근처에서 시작해야 화면에 보입니다.
+    img.origin.set(0, 0); 
+    img.x = 0; 
+    img.y = 0; 
+    
+    return img;
+}
     
     public static Image avatar( HeroClass cl, int armorTier ) {
         Image avatar = new Image( cl.spritesheet() );

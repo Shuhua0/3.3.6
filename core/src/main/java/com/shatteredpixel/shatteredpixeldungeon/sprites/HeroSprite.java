@@ -147,7 +147,13 @@ public void sprint( float speed ) {
         if (run != null) run.delay = 1f / speed / RUN_FRAMERATE;
     }
     
-    // 1. 모든 직업 호환 필름 생성
+// 인자 없는 버전 (다른 파일들 에러 방지용)
+    public static TextureFilm tiers() {
+        SmartTexture tx = TextureCache.get(Assets.Sprites.MAGE);
+        return new TextureFilm( tx, tx.width, FRAME_HEIGHT );
+    }
+
+    // 인자 있는 버전 (현재 클래스 내부 사용용)
     public static TextureFilm tiers(SmartTexture texture) {
         return new TextureFilm( texture, texture.width, FRAME_HEIGHT );
     }

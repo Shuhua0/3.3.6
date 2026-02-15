@@ -1,0 +1,341 @@
+/*
+ * Pixel Dungeon
+ * Copyright (C) 2012-2015 Oleg Dolya
+ *
+ * Shattered Pixel Dungeon
+ * Copyright (C) 2014-2025 Evan Debenham
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.scenes;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.items.remains.RemainsItem;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.EarthGuardianSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.GhostSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.RatSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.WardSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.glwrap.Matrix;
+import com.watabou.glwrap.Quad;
+import com.watabou.input.PointerEvent;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.NoosaScript;
+import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.Visual;
+import com.watabou.noosa.audio.Music;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+import com.watabou.utils.RectF;
+
+import java.nio.Buffer;
+import java.nio.FloatBuffer;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
+public class SurfaceScene extends PixelScene {
+
+	private static final int FRAME_WIDTH    = 88;
+	private static final int FRAME_HEIGHT    = 125;
+
+	private static final int FRAME_MARGIN_TOP    = 9;
+	private static final int FRAME_MARGIN_X        = 4;
+
+	private static final int BUTTON_HEIGHT    = 20;
+
+	private static final int SKY_WIDTH    = 80;
+	private static final int SKY_HEIGHT    = 112;
+
+	private static final int NSTARS		= 100;
+	private static final int NCLOUDS	= 5;
+
+	private Pet[] rats;
+
+	private Camera viewport;
+@Override
+    public void create() {
+        // super.create()를 호출하지 않습니다. (기존 조각들 생성 방지)
+        
+        // 1. 카메라 설정 및 배경 음악
+        uiCamera.visible = false;
+        Music.INSTANCE.playTracks(
+                new String[]{Assets.Music.THEME_2, Assets.Music.THEME_1},
+                new float[]{1, 1},
+                false);
+
+        final int w = Camera.main.width;
+        final int h = Camera.main.height;
+
+        // 2. 배경 이미지 강제 출력 (절대 경로 사용)
+        Image background;
+        try {
+            // 파일을 못 찾을 경우를 대비해 확실한 캐시 로드 사용
+            background = new Image( TextureCache.get( "splashes/bg_custom.png" ) );
+        } catch (Exception e) {
+            // 실패 시 기본 인터페이스라도 띄움
+            background = new Image( Assets.Interfaces.SURFACE );
+        }
+        
+        // 3. 화면 꽉 차게 크기 조절
+        float scaleX = (float) w / background.width();
+        float scaleY = (float) h / background.height();
+        float finalScale = Math.max(scaleX, scaleY);
+        
+        background.scale.set(finalScale);
+        background.x = (w - background.width() * finalScale) / 2f;
+        background.y = (h - background.height() * finalScale) / 2f;
+        
+        // 4. 엔진 레이어 무시하고 강제 추가
+        add(background);
+
+        // 5. 버튼 설정 (이건 기존과 동일하게 안전하게 처리)
+        RedButton gameOver = new RedButton( Messages.get(this, "exit") ) {
+            @Override
+            protected void onClick() {
+                Game.switchScene( RankingsScene.class );
+            }
+        };
+        gameOver.setRect( (w - 80) / 2f, h - 40f, 80, 20 );
+        add( gameOver );
+
+        fadeIn();
+    }
+
+	private float ratJumpTimer = 0.02f;
+	@Override
+	public void update() {
+		if (rats != null) {
+			ratJumpTimer -= Game.elapsed;
+			while (ratJumpTimer <= 0f) {
+				ratJumpTimer += 0.02f;
+				Random.element(rats).jump();
+			}
+		}
+
+		super.update();
+
+	}
+
+	@Override
+	public void destroy() {
+		Camera.remove( viewport );
+		super.destroy();
+	}
+	
+	@Override
+	protected void onBackPressed() {
+	}
+	
+	private static class Sky extends Visual {
+		
+		private static final int[] day		= {0xFF4488FF, 0xFFCCEEFF};
+		private static final int[] night	= {0xFF001155, 0xFF335980};
+		
+		private SmartTexture texture;
+		private FloatBuffer verticesBuffer;
+		
+		public Sky( boolean dayTime ) {
+			super( 0, 0, 1, 1 );
+
+			texture = TextureCache.createGradient( dayTime ? day : night );
+			
+			float[] vertices = new float[16];
+			verticesBuffer = Quad.create();
+			
+			vertices[2]		= 0.25f;
+			vertices[6]		= 0.25f;
+			vertices[10]	= 0.75f;
+			vertices[14]	= 0.75f;
+			
+			vertices[3]		= 0;
+			vertices[7]		= 1;
+			vertices[11]	= 1;
+			vertices[15]	= 0;
+			
+			
+			vertices[0] 	= 0;
+			vertices[1] 	= 0;
+			
+			vertices[4] 	= 1;
+			vertices[5] 	= 0;
+			
+			vertices[8] 	= 1;
+			vertices[9] 	= 1;
+			
+			vertices[12]	= 0;
+			vertices[13]	= 1;
+
+			((Buffer)verticesBuffer).position( 0 );
+			verticesBuffer.put( vertices );
+		}
+		
+		@Override
+		public void draw() {
+			
+			super.draw();
+
+			NoosaScript script = NoosaScript.get();
+			
+			texture.bind();
+			
+			script.camera( camera() );
+			
+			script.uModel.valueM4( matrix );
+			script.lighting(
+				rm, gm, bm, am,
+				ra, ga, ba, aa );
+			
+			script.drawQuad( verticesBuffer );
+		}
+	}
+	
+	private static class Cloud extends Image {
+		
+		private static int lastIndex = -1;
+		
+		public Cloud( float y, boolean dayTime ) {
+			super( Assets.Interfaces.SURFACE );
+			
+			int index;
+			do {
+				index = Random.Int( 3 );
+			} while (index == lastIndex);
+			
+			switch (index) {
+			case 0:
+				frame( 88, 0, 49, 20 );
+				break;
+			case 1:
+				frame( 88, 20, 49, 22 );
+				break;
+			case 2:
+				frame( 88, 42, 50, 18 );
+				break;
+			}
+			
+			lastIndex = index;
+			
+			this.y = y;
+
+			scale.set( 1 - y / SKY_HEIGHT );
+			x = Random.Float( SKY_WIDTH + width() ) - width();
+			speed.x = scale.x * (dayTime ? +8 : -8);
+			
+			if (dayTime) {
+				tint( 0xCCEEFF, 1 - scale.y );
+			} else {
+				rm = gm = bm = +3.0f;
+				ra = ga = ba = -2.1f;
+			}
+		}
+		
+		@Override
+		public void update() {
+			super.update();
+			if (speed.x > 0 && x > SKY_WIDTH) {
+				x = -width();
+			} else if (speed.x < 0 && x < -width()) {
+				x = SKY_WIDTH;
+			}
+		}
+	}
+
+	private static class Avatar extends Image {
+		
+		private static final int WIDTH	= 24;
+		private static final int HEIGHT	= 32;
+		
+		public Avatar( HeroClass cl ) {
+			super( Assets.Sprites.AVATARS );
+			frame( new TextureFilm( texture, WIDTH, HEIGHT ).get( cl.ordinal() ) );
+		}
+	}
+	
+	private static class Pet extends RatSprite {
+		
+		public void jump() {
+			play( run );
+		}
+		
+		@Override
+		public void onComplete( Animation anim ) {
+			if (anim == run) {
+				idle();
+			}
+		}
+	}
+	
+	private static class GrassPatch extends Image {
+		
+		public static final int WIDTH	= 16;
+		public static final int HEIGHT	= 14;
+		
+		private float tx;
+		private float ty;
+		
+		private double a = Random.Float( 5 );
+		private double angle;
+		
+		private boolean forward;
+		
+		public GrassPatch( float tx, float ty, boolean forward ) {
+			
+			super( Assets.Interfaces.SURFACE );
+			
+			frame( 88 + Random.Int( 4 ) * WIDTH, 60, WIDTH, HEIGHT );
+			
+			this.tx = tx;
+			this.ty = ty;
+			
+			this.forward = forward;
+		}
+		
+		@Override
+		public void update() {
+			super.update();
+			a += Random.Float( Game.elapsed * 5 );
+			angle = (2 + Math.cos( a )) * (forward ? +0.2 : -0.2);
+			
+			scale.y = (float)Math.cos( angle );
+			
+			x = tx + (float)Math.tan( angle ) * width;
+			y = ty - scale.y * height;
+		}
+		
+		@Override
+		protected void updateMatrix() {
+			super.updateMatrix();
+			Matrix.skewX( matrix, (float)(angle / Matrix.G2RAD) );
+		}
+	}
+}

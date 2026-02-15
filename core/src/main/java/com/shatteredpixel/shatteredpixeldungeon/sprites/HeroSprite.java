@@ -145,7 +145,8 @@ public class HeroSprite extends CharSprite {
 		if (run != null) run.delay = 1f / speed / RUN_FRAMERATE;
 	}
 	
-public static TextureFilm tiers() {
+// 빌드 에러 방지 (입구 2개)
+    public static TextureFilm tiers() {
         if (tiers == null) {
             SmartTexture texture = TextureCache.get( Assets.Sprites.MAGE );
             tiers = new TextureFilm( texture, texture.width, FRAME_HEIGHT );
@@ -157,27 +158,28 @@ public static TextureFilm tiers() {
         return new TextureFilm( texture, texture.width, FRAME_HEIGHT );
     }
 
-public static Image avatar( Hero hero ){
-    HeroClass cl = (hero.buff(HeroDisguise.class) != null) ? 
-        hero.buff(HeroDisguise.class).getDisguise() : hero.heroClass;
+    public static Image avatar( Hero hero ){
+        HeroClass cl = (hero.buff(HeroDisguise.class) != null) ? 
+            hero.buff(HeroDisguise.class).getDisguise() : hero.heroClass;
 
-    Image img = avatar(cl, hero.tier());
-    
-    // origin을 0으로 잡았다면, x와 y도 0 근처에서 시작해야 화면에 보입니다.
-    img.origin.set(0, 0); 
-    img.x = 0; 
-    img.y = 0; 
-    
-    return img;
-}
+        Image img = avatar(cl, hero.tier());
+        
+        // 좌표 강제 초기화 (화면 왼쪽 구석)
+        img.origin.set(0, 0); 
+        img.x = 0; 
+        img.y = 0; 
+        
+        return img;
+    }
     
     public static Image avatar( HeroClass cl, int armorTier ) {
         Image avatar = new Image( cl.spritesheet() );
+        // 48x60 규격 절단
         avatar.frame( 0, armorTier * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT );
         
-        // 기존의 이 origin 설정이 이동을 방해했을 수 있습니다.
-        avatar.origin.set( FRAME_WIDTH / 2f, FRAME_HEIGHT / 2f );
-        avatar.scale.set( 0.25f ); 
+        // 배율 1.0f로 강제 확대 (안 보일 수 없음)
+        avatar.origin.set(0, 0);
+        avatar.scale.set( 1.0f ); 
         return avatar;
     }
 }

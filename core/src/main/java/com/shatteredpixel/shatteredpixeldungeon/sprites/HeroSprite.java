@@ -145,7 +145,7 @@ public class HeroSprite extends CharSprite {
 		if (run != null) run.delay = 1f / speed / RUN_FRAMERATE;
 	}
 	
-// 빌드 에러 방지 (입구 2개)
+// 빌드 에러 방지용 입구
     public static TextureFilm tiers() {
         if (tiers == null) {
             SmartTexture texture = TextureCache.get( Assets.Sprites.MAGE );
@@ -159,27 +159,26 @@ public class HeroSprite extends CharSprite {
     }
 
     public static Image avatar( Hero hero ){
-        HeroClass cl = (hero.buff(HeroDisguise.class) != null) ? 
-            hero.buff(HeroDisguise.class).getDisguise() : hero.heroClass;
+        HeroClass cl = (hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HeroDisguise.class) != null) ? 
+            hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HeroDisguise.class).getDisguise() : hero.heroClass;
 
         Image img = avatar(cl, hero.tier());
         
-        // 좌표 강제 초기화 (화면 왼쪽 구석)
         img.origin.set(0, 0); 
+        // 0.25배 축소 후 UI 칸에 맞추기 위한 미세 좌표
         img.x = 0; 
-        img.y = 0; 
+        img.y = -2; 
         
         return img;
     }
     
     public static Image avatar( HeroClass cl, int armorTier ) {
         Image avatar = new Image( cl.spritesheet() );
-        // 48x60 규격 절단
         avatar.frame( 0, armorTier * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT );
         
-        // 배율 1.0f로 강제 확대 (안 보일 수 없음)
+        // 0.25배로 축소 (48x60 -> 12x15)
         avatar.origin.set(0, 0);
-        avatar.scale.set( 1.0f ); 
+        avatar.scale.set( 0.25f ); 
         return avatar;
     }
 }

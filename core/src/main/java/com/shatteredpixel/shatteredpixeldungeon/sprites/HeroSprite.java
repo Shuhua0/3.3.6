@@ -24,7 +24,7 @@ public class HeroSprite extends CharSprite {
 	
 	private static final int RUN_FRAMERATE	= 20;
 	
-	
+	private static TextureFilm tiers;
 	
 	private Animation fly;
 	private Animation read;
@@ -55,9 +55,7 @@ public class HeroSprite extends CharSprite {
 		texture( (ch != null) ? ((Hero)ch).heroClass.spritesheet() : Assets.Sprites.MAGE );
 		
 		int tier = (Dungeon.hero != null) ? Dungeon.hero.tier() : 0;
-// 현재 캐릭터의 텍스처를 직접 전달하여 정확한 크기의 필름을 생성합니다.
-SmartTexture tx = TextureCache.get( (ch != null) ? ((Hero)ch).heroClass.spritesheet() : Assets.Sprites.MAGE );
-TextureFilm film = new TextureFilm( tiers(tx), tier, FRAME_WIDTH, FRAME_HEIGHT );
+		TextureFilm film = new TextureFilm( tiers(), tier, FRAME_WIDTH, FRAME_HEIGHT );
 		
 		// [핵심] 게임 내 거대화 방지: 48x60 도트를 1/4로 축소하여 12x15 영역에 맞춤
 		scale.set( 0.25f ); 
@@ -143,47 +141,41 @@ TextureFilm film = new TextureFilm( tiers(tx), tier, FRAME_WIDTH, FRAME_HEIGHT )
 		super.update();
 	}
 	
-public void sprint( float speed ) {
-        if (run != null) run.delay = 1f / speed / RUN_FRAMERATE;
-    }
-    
-// 인자 없는 버전 (다른 파일들 에러 방지용)
-    public static TextureFilm tiers() {
-        SmartTexture tx = TextureCache.get(Assets.Sprites.MAGE);
-        return new TextureFilm( tx, tx.width, FRAME_HEIGHT );
-    }
+	public void sprint( float speed ) {
+		if (run != null) run.delay = 1f / speed / RUN_FRAMERATE;
+	}
+	
+	public static TextureFilm tiers() {
+		if (tiers == null) {
+			SmartTexture texture = TextureCache.get( Assets.Sprites.MAGE );
+			tiers = new TextureFilm( texture, texture.width, FRAME_HEIGHT );
+		}
+		return tiers;
+	}
 
-    // 인자 있는 버전 (현재 클래스 내부 사용용)
-    public static TextureFilm tiers(SmartTexture texture) {
-        return new TextureFilm( texture, texture.width, FRAME_HEIGHT );
-    }
-
-    // 2. 인게임 11시 UI용 (여기에 좌표 설정이 들어감)
-    public static Image avatar( Hero hero ){
+public static Image avatar( Hero hero ){
         HeroClass cl = (hero.buff(HeroDisguise.class) != null) ? 
             hero.buff(HeroDisguise.class).getDisguise() : hero.heroClass;
 
         Image img = avatar(cl, hero.tier());
         
-        // origin을 0으로 잡고 x, y를 0으로 초기화해서 화면에 보이게 함
+        // [수정] origin을 0으로 만들어야 x, y 좌표 이동이 정확하게 먹힙니다.
         img.origin.set(0, 0); 
-        img.x = 0; 
-        img.y = 0; 
+        
+        // 이제 이 마이너스 값들이 확실하게 캐릭터를 왼쪽 위로 보낼 겁니다.
+        img.x = -15; 
+        img.y = -25; 
         
         return img;
     }
-
-    // 3. 실제 이미지를 잘라오는 로직
+    
     public static Image avatar( HeroClass cl, int armorTier ) {
         Image avatar = new Image( cl.spritesheet() );
-        
-        // 48x60 규격에 맞게 프레임 절단
         avatar.frame( 0, armorTier * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT );
         
-        // 1/4 축소
+        // 기존의 이 origin 설정이 이동을 방해했을 수 있습니다.
         avatar.origin.set( FRAME_WIDTH / 2f, FRAME_HEIGHT / 2f );
         avatar.scale.set( 0.25f ); 
-        
         return avatar;
     }
-} // 클래스 끝
+}

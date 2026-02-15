@@ -123,22 +123,10 @@ public class StatusPane extends Component {
 				return Messages.titleCase(Messages.get(WndKeyBindings.class, "hero_info"));
 			}
 		};
-add(heroInfo);
+		add(heroInfo);
 
-        // HeroSprite.avatar()를 쓰지 않고, 텍스처에서 직접 새 이미지를 뽑아냅니다.
-        // 이렇게 해야 버튼(HeroBtn)과 완전히 남남이 됩니다.
-        avatar = new Image( Dungeon.hero.sprite.texture ); 
-        
-        // 0.25배 된 녀석을 가져오는 게 아니라, 원본 소스에서 직접 48x60을 자릅니다.
-        avatar.frame( 0, 0, 48, 60 ); 
-        
-        // 혹시 모를 오염 방지용 강제 설정
-        avatar.scale.set( 1.0f );
-        avatar.width = 48;
-        avatar.height = 60;
-        
-        add( avatar );
-        // ------------------------------
+		avatar = HeroSprite.avatar( Dungeon.hero );
+		add( avatar );
 
 		talentBlink = 0;
 
@@ -190,59 +178,27 @@ add(heroInfo);
 		counter.show(this, busy.center(), 0f);
 	}
 
-@Override
-    protected void layout() {
+	@Override
+	protected void layout() {
 
-        height = large ? 39 : 38;
+		height = large ? 39 : 38;
 
-        float heroPaneWidth = 30 + heroPaneExtraWidth;
+		float heroPaneWidth = 30 + heroPaneExtraWidth;
 
-        bg.x = x + heroPaneExtraWidth;
-        bg.y = y;
-        if (large)  bg.size( 160, bg.height ); 
-        else        bg.size(hpBarMaxWidth+32, bg.height ); 
+		bg.x = x + heroPaneExtraWidth;
+		bg.y = y;
+		if (large)  bg.size( 160, bg.height ); //HP bars must be 128px wide atm
+		else        bg.size(hpBarMaxWidth+32, bg.height ); //default max right is 50px health bar + 32
 
-        // --- 아바타 위치 및 크기 설정 시작 ---
-        if (avatar != null) {
-            // 1. 프레임 고정
-            avatar.frame( 0, 0, 48, 60 ); 
-            
-            // 2. 강제 축소
-            avatar.scale.set( 0.25f ); 
-            
-            // 3. 논리적 크기 지정 (1/4 사이즈)
-            avatar.width = 12;
-            avatar.height = 15;
+		avatar.x = bg.x - avatar.width / 2f + 15;
+		avatar.y = bg.y - avatar.height / 2f + 16;
+		PixelScene.align(avatar);
 
-            // 4. 위치 조정 (bg.x와 bg.y 기준으로 안쪽에 배치)
-            // 아까 칸을 벗어났다고 하셨으니, 이 숫자를 조절해서 칸 중앙에 맞춥니다.
-            avatar.x = bg.x + 8; 
-            avatar.y = bg.y + 7;
-            
-            // PixelScene.align(avatar); // 여전히 크다면 주석 유지
-        }
-        // --- 아바타 위치 설정 끝 ---
+		heroInfo.setRect( x, y, heroPaneWidth, large ? 40 : 36 );
 
-        heroInfo.setRect( x, y, heroPaneWidth, large ? 40 : 36 );
-
-        if (avatar != null) {
-            compass.x = avatar.x + 6 - compass.origin.x; 
-            compass.y = avatar.y + 7 - compass.origin.y;
-            PixelScene.align(compass);
-        }
-
-        // ... 이후 기존 코드 (if (large) { ... } 등) 유지
-
-        heroInfo.setRect( x, y, heroPaneWidth, large ? 40 : 36 );
-
-        // 3. 나침반 위치 (아바타가 작아졌으므로 보정값을 줄임)
-        if (avatar != null) {
-            compass.x = avatar.x + 6 - compass.origin.x; 
-            compass.y = avatar.y + 7 - compass.origin.y;
-            PixelScene.align(compass);
-        }
-
-        // ... 이후 기존 코드 동일
+		compass.x = avatar.x + avatar.width / 2f - compass.origin.x;
+		compass.y = avatar.y + avatar.height / 2f - compass.origin.y;
+		PixelScene.align(compass);
 
 		if (large) {
 			exp.x = x + 30;
@@ -330,97 +286,99 @@ add(heroInfo);
 	private int oldShield = 0;
 	private int oldMax = 0;
 
-@Override
-    public void update() {
-        super.update();
-        
-        // 1. [핵심] 엔진의 설정을 무시하고 매 순간 크기를 강제 고정합니다.
-        if (avatar != null) {
-            avatar.scale.set( 0.25f ); 
-            avatar.frame( 0, 0, 48, 60 ); 
-            avatar.width = 12;
-            avatar.height = 15;
-        }
+	@Override
+	public void update() {
+		super.update();
+		
+		int health = Dungeon.hero.HP;
+		int shield = Dungeon.hero.shielding();
+		int max = Dungeon.hero.HT;
 
-        // --- 여기서부터 update의 나머지 로직들입니다 (괄호 안에 있어야 함) ---
-        int health = Dungeon.hero.HP;
-        int shield = Dungeon.hero.shielding();
-        int max = Dungeon.hero.HT;
+		if (!Dungeon.hero.isAlive()) {
+			avatar.tint(0x000000, 0.5f);
+		} else if ((health/(float)max) < 0.334f) {
+			warning += Game.elapsed * 5f *(0.4f - (health/(float)max));
+			warning %= 1f;
+			avatar.tint(ColorMath.interpolate(warning, warningColors), 0.5f );
+		} else if (talentBlink > 0.33f){ //stops early so it doesn't end in the middle of a blink
+			talentBlink -= Game.elapsed;
+			avatar.tint(1, 1, 0, (float)Math.abs(Math.cos(talentBlink*FLASH_RATE))/2f);
+		} else {
+			avatar.resetColor();
+		}
 
-        if (!Dungeon.hero.isAlive()) {
-            avatar.tint(0x000000, 0.5f);
-        } else if ((health/(float)max) < 0.334f) {
-            warning += Game.elapsed * 5f *(0.4f - (health/(float)max));
-            warning %= 1f;
-            avatar.tint(ColorMath.interpolate(warning, warningColors), 0.5f );
-        } else if (talentBlink > 0.33f){ 
-            talentBlink -= Game.elapsed;
-            avatar.tint(1, 1, 0, (float)Math.abs(Math.cos(talentBlink*FLASH_RATE))/2f);
-        } else {
-            avatar.resetColor();
-        }
+		float healthPercent = health/(float)max;
+		float shieldPercent = shield/(float)max;
 
-        float healthPercent = health/(float)max;
-        float shieldPercent = shield/(float)max;
+		if (healthPercent + shieldPercent > 1f){
+			float excess = healthPercent + shieldPercent;
+			healthPercent /= excess;
+			shieldPercent /= excess;
+		}
 
-        if (healthPercent + shieldPercent > 1f){
-            float excess = healthPercent + shieldPercent;
-            healthPercent /= excess;
-            shieldPercent /= excess;
-        }
+		hp.scale.x = healthPercent;
+		shieldHP.scale.x = healthPercent + shieldPercent;
 
-        hp.scale.x = healthPercent;
-        shieldHP.scale.x = healthPercent + shieldPercent;
+		if (oldHP != health || oldShield != shield || oldMax != max){
+			if (shield <= 0) {
+				hpText.text(health + "/" + max);
+			} else {
+				hpText.text(health + "+" + shield + "/" + max);
+			}
+			oldHP = health;
+			oldShield = shield;
+			oldMax = max;
+		}
 
-        if (oldHP != health || oldShield != shield || oldMax != max){
-            if (shield <= 0) {
-                hpText.text(health + "/" + max);
-            } else {
-                hpText.text(health + "+" + shield + "/" + max);
-            }
-            oldHP = health;
-            oldShield = shield;
-            oldMax = max;
-        }
+		if (large) {
+			exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
 
-        if (large) {
-            exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
-            hpText.measure();
-            hpText.x = hp.x + (128 - hpText.width())/2f;
-            expText.text(Dungeon.hero.exp + "/" + Dungeon.hero.maxExp());
-            expText.measure();
-            expText.x = hp.x + (128 - expText.width())/2f;
-        } else {
-            exp.scale.x = ((17 + heroPaneExtraWidth) / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
-            expText.text(Dungeon.hero.exp + "/" + Dungeon.hero.maxExp());
-        }
+			hpText.measure();
+			hpText.x = hp.x + (128 - hpText.width())/2f;
 
-        if (Dungeon.hero.lvl != lastLvl) {
-            if (lastLvl != -1) {
-                showStarParticles();
-            }
-            lastLvl = Dungeon.hero.lvl;
-            if (large){
-                level.text( "lv. " + lastLvl );
-                level.measure();
-                level.x = x + (30f - level.width()) / 2f;
-                level.y = y + 33f - level.baseLine() / 2f;
-            } else {
-                level.text( Integer.toString( lastLvl ) );
-                level.measure();
-                level.x = x + heroPaneExtraWidth + 25.5f - level.width() / 2f;
-                level.y = y + 31.0f - level.baseLine() / 2f;
-            }
-            PixelScene.align(level);
-        }
+			expText.text(Dungeon.hero.exp + "/" + Dungeon.hero.maxExp());
+			expText.measure();
+			expText.x = hp.x + (128 - expText.width())/2f;
 
-        counter.setSweep((1f - Actor.now()%1f)%1f);
-    } // <--- update 메서드를 닫는 이 괄호가 여기 있어야 합니다!
+		} else {
+			exp.scale.x = ((17 + heroPaneExtraWidth) / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
+			expText.text(Dungeon.hero.exp + "/" + Dungeon.hero.maxExp());
+		}
 
-public void updateAvatar(){
-        // 기존 copy 코드를 지우고 layout() 호출로 변경
-        layout(); 
-    }
+		if (Dungeon.hero.lvl != lastLvl) {
+
+			if (lastLvl != -1) {
+				showStarParticles();
+			}
+
+			lastLvl = Dungeon.hero.lvl;
+
+			if (large){
+				level.text( "lv. " + lastLvl );
+				level.measure();
+				level.x = x + (30f - level.width()) / 2f;
+				level.y = y + 33f - level.baseLine() / 2f;
+			} else {
+				level.text( Integer.toString( lastLvl ) );
+				level.measure();
+				level.x = x + heroPaneExtraWidth + 25.5f - level.width() / 2f;
+				level.y = y + 31.0f - level.baseLine() / 2f;
+			}
+			PixelScene.align(level);
+		}
+
+		int tier = Dungeon.hero.tier();
+		if (tier != lastTier) {
+			lastTier = tier;
+			avatar.copy( HeroSprite.avatar( Dungeon.hero ) );
+		}
+
+		counter.setSweep((1f - Actor.now()%1f)%1f);
+	}
+
+	public void updateAvatar(){
+		avatar.copy( HeroSprite.avatar( Dungeon.hero ) );
+	}
 
 	public void alpha( float value ){
 		value = GameMath.gate(0, value, 1f);

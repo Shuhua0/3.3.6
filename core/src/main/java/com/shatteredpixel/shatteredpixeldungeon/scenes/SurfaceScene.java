@@ -82,54 +82,194 @@ public class SurfaceScene extends PixelScene {
 	private Pet[] rats;
 
 	private Camera viewport;
-@Override
-    public void create() {
-        // super.create()를 호출하지 않습니다. (기존 조각들 생성 방지)
-        
-        // 1. 카메라 설정 및 배경 음악
-        uiCamera.visible = false;
-        Music.INSTANCE.playTracks(
-                new String[]{Assets.Music.THEME_2, Assets.Music.THEME_1},
-                new float[]{1, 1},
-                false);
+	@Override
+	public void create() {
+		
+		super.create();
 
-        final int w = Camera.main.width;
-        final int h = Camera.main.height;
+		Music.INSTANCE.playTracks(
+				new String[]{Assets.Music.THEME_2, Assets.Music.THEME_1},
+				new float[]{1, 1},
+				false);
+		
+		uiCamera.visible = false;
+		
+		int w = Camera.main.width;
+		int h = Camera.main.height;
 
-        // 2. 배경 이미지 강제 출력 (절대 경로 사용)
-        Image background;
-        try {
-            // 파일을 못 찾을 경우를 대비해 확실한 캐시 로드 사용
-            background = new Image( TextureCache.get( "splashes/bg_custom.png" ) );
-        } catch (Exception e) {
-            // 실패 시 기본 인터페이스라도 띄움
-            background = new Image( Assets.Interfaces.SURFACE );
-        }
-        
-        // 3. 화면 꽉 차게 크기 조절
-        float scaleX = (float) w / background.width();
-        float scaleY = (float) h / background.height();
-        float finalScale = Math.max(scaleX, scaleY);
-        
-        background.scale.set(finalScale);
-        background.x = (w - background.width() * finalScale) / 2f;
-        background.y = (h - background.height() * finalScale) / 2f;
-        
-        // 4. 엔진 레이어 무시하고 강제 추가
-        add(background);
+		RectF insets = getCommonInsets();
 
-        // 5. 버튼 설정 (이건 기존과 동일하게 안전하게 처리)
-        RedButton gameOver = new RedButton( Messages.get(this, "exit") ) {
-            @Override
-            protected void onClick() {
-                Game.switchScene( RankingsScene.class );
-            }
-        };
-        gameOver.setRect( (w - 80) / 2f, h - 40f, 80, 20 );
-        add( gameOver );
+		TitleBackground BG = new TitleBackground(w, h);
+		add( BG );
 
-        fadeIn();
-    }
+		w -= insets.left + insets.right;
+		h -= insets.top + insets.bottom;
+
+		float vx = align(insets.left + (w - SKY_WIDTH) / 2f);
+		float vy = align(insets.top + (h - SKY_HEIGHT - BUTTON_HEIGHT) / 2f);
+
+		Point s = Camera.main.cameraToScreen( vx, vy );
+		viewport = new Camera( s.x, s.y, SKY_WIDTH, SKY_HEIGHT, defaultZoom );
+		Camera.add( viewport );
+		
+		Group window = new Group();
+		window.camera = viewport;
+		add( window );
+
+		Calendar cal = GregorianCalendar.getInstance();
+		boolean dayTime = cal.get(Calendar.HOUR_OF_DAY) >= 8 && cal.get(Calendar.HOUR_OF_DAY) <= 19;
+		
+		Sky sky = new Sky( dayTime );
+		sky.scale.set( SKY_WIDTH, SKY_HEIGHT );
+		window.add( sky );
+		
+		if (!dayTime) {
+			for (int i=0; i < NSTARS; i++) {
+				float size = Random.Float();
+				ColorBlock star = new ColorBlock( size, size, 0xFFFFFFFF );
+				star.x = Random.Float( SKY_WIDTH ) - size / 2;
+				star.y = Random.Float( SKY_HEIGHT ) - size / 2;
+				star.am = size * (1 - star.y / SKY_HEIGHT);
+				window.add( star );
+			}
+		}
+		
+		float range = SKY_HEIGHT * 2 / 3;
+		for (int i=0; i < NCLOUDS; i++) {
+			Cloud cloud = new Cloud( (NCLOUDS - 1 - i) * (range / NCLOUDS) + Random.Float( range / NCLOUDS ), dayTime );
+			window.add( cloud );
+		}
+		
+		int nPatches = (int)(sky.width() / GrassPatch.WIDTH + 1);
+		
+		for (int i=0; i < nPatches * 4; i++) {
+			GrassPatch patch = new GrassPatch( (i - 0.75f) * GrassPatch.WIDTH / 4, SKY_HEIGHT + 1, dayTime );
+			patch.brightness( dayTime ? 0.7f : 0.4f );
+			window.add( patch );
+		}
+		
+		Avatar a = new Avatar( Dungeon.hero.heroClass );
+		// Removing semitransparent contour
+		a.am = 2; a.aa = -1;
+		a.x = (SKY_WIDTH - a.width) / 2;
+		a.y = SKY_HEIGHT - a.height;
+		align(a);
+
+		if (Dungeon.hero.armorAbility instanceof Ratmogrify) {
+			rats = new Pet[30];
+			for (int i = 0; i < rats.length; i++){
+				Pet pet = new Pet();
+				pet.rm = pet.gm = pet.bm = 1.2f;
+				pet.x = Random.Int(SKY_WIDTH)-10;
+				pet.y = SKY_HEIGHT - pet.height;
+				window.add(pet);
+				rats[i] = pet;
+				if (dayTime) pet.brightness( 1.2f );
+			}
+		}
+
+		final Pet pet = new Pet();
+		pet.rm = pet.gm = pet.bm = 1.2f;
+		pet.x = SKY_WIDTH / 2 + 2;
+		pet.y = SKY_HEIGHT - pet.height;
+		align(pet);
+		
+		//allies. Attempts to pick highest level, but prefers rose > earth > ward.
+		//Rose level is halved because it's easier to upgrade
+		CharSprite allySprite = null;
+		
+		//picks the highest between ghost's weapon, armor, and rose level/2
+		int roseLevel = 0;
+		DriedRose rose = Dungeon.hero.belongings.getItem(DriedRose.class);
+		if (rose != null){
+			roseLevel = rose.level()/2;
+			if (rose.ghostWeapon() != null){
+				roseLevel = Math.max(roseLevel, rose.ghostWeapon().level());
+			}
+			if (rose.ghostArmor() != null){
+				roseLevel = Math.max(roseLevel, rose.ghostArmor().level());
+			}
+		}
+		
+		int earthLevel = Dungeon.hero.belongings.getItem(WandOfLivingEarth.class) == null ? 0 : Dungeon.hero.belongings.getItem(WandOfLivingEarth.class).level();
+		int wardLevel = Dungeon.hero.belongings.getItem(WandOfWarding.class) == null ? 0 : Dungeon.hero.belongings.getItem(WandOfWarding.class).level();
+		
+		MagesStaff staff = Dungeon.hero.belongings.getItem(MagesStaff.class);
+		if (staff != null){
+			if (staff.wandClass() == WandOfLivingEarth.class){
+				earthLevel = Math.max(earthLevel, staff.level());
+			} else if (staff.wandClass() == WandOfWarding.class){
+				wardLevel = Math.max(wardLevel, staff.level());
+			}
+		}
+		
+		if (roseLevel >= 3 && roseLevel >= earthLevel && roseLevel >= wardLevel){
+			allySprite = new GhostSprite();
+			if (dayTime) allySprite.alpha(0.4f);
+		} else if (earthLevel >= 3 && earthLevel >= wardLevel){
+			allySprite = new EarthGuardianSprite();
+		} else if (wardLevel >= 3){
+			allySprite = new WardSprite();
+			((WardSprite) allySprite).updateTier(Math.min(wardLevel+2, 6));
+		}
+		
+		if (allySprite != null){
+			allySprite.add(CharSprite.State.PARALYSED);
+			allySprite.scale = new PointF(2, 2);
+			allySprite.x = a.x - allySprite.width()*0.75f;
+			allySprite.y = SKY_HEIGHT - allySprite.height();
+			align(allySprite);
+			window.add(allySprite);
+		}
+
+		if (Dungeon.hero.belongings.getItem(RemainsItem.class) != null){
+			Image grave = new Image(Assets.Interfaces.SURFACE, 88, 74, 16, 22);
+
+			grave.x = a.x + a.width() + 10;
+			grave.y = a.y + a.height() - grave.height();
+			window.add(grave);
+		}
+		
+		window.add( a );
+		window.add( pet );
+		
+		window.add( new PointerArea( sky ) {
+			protected void onClick( PointerEvent event ) {
+				pet.jump();
+			}
+		} );
+		
+		for (int i=0; i < nPatches; i++) {
+			GrassPatch patch = new GrassPatch( (i - 0.5f) * GrassPatch.WIDTH, SKY_HEIGHT, dayTime );
+			patch.brightness( dayTime ? 1.0f : 0.8f );
+			window.add( patch );
+		}
+		
+		Image frame = new Image( Assets.Interfaces.SURFACE );
+
+		frame.frame( 0, 0, FRAME_WIDTH, FRAME_HEIGHT );
+		frame.x = vx - FRAME_MARGIN_X;
+		frame.y = vy - FRAME_MARGIN_TOP;
+		add( frame );
+
+		if (dayTime) {
+			a.brightness( 1.2f );
+			pet.brightness( 1.2f );
+		} else {
+			frame.hardlight( 0xDDEEFF );
+		}
+
+		RedButton gameOver = new RedButton( Messages.get(this, "exit") ) {
+			protected void onClick() {
+				Game.switchScene( RankingsScene.class );
+			}
+		};
+		gameOver.setSize( SKY_WIDTH - FRAME_MARGIN_X * 2, BUTTON_HEIGHT );
+		gameOver.setPos( frame.x + FRAME_MARGIN_X * 2, frame.y + frame.height + 4 );
+		add( gameOver );
+		
+		fadeIn();
+	}
 
 	private float ratJumpTimer = 0.02f;
 	@Override

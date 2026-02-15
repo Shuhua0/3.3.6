@@ -220,27 +220,24 @@ public class StartScene extends PixelScene {
 					name.text(Messages.titleCase(info.heroClass.title()));
 				}
 				
-				if (hero == null){
-					// [수정] 48x60 규격 적용: 15*armorTier -> 60*armorTier, 12, 15 -> 48, 60
-					hero = HeroSprite.avatar(info.heroClass, info.armorTier);
-					add(hero);
-					
-					steps = new Image(Icons.get(Icons.STAIRS));
-					add(steps);
-					depth = new BitmapText(PixelScene.pixelFont);
-					add(depth);
-					
-					classIcon = new Image(Icons.get(info.heroClass));
-					add(classIcon);
-					level = new BitmapText(PixelScene.pixelFont);
-					add(level);
-				} else {
-					// [수정] 48x60 규격 적용
-					hero.copy(new Image(info.heroClass.spritesheet(), 0, 60*info.armorTier, 48, 60));
-					
-					classIcon.copy(Icons.get(info.heroClass));
-				}
-
+if (hero == null){
+                    hero = HeroSprite.avatar(info.heroClass, info.armorTier);
+                    add(hero);
+                    
+                    steps = new Image(Icons.get(Icons.STAIRS));
+                    add(steps);
+                    depth = new BitmapText(PixelScene.pixelFont);
+                    add(depth);
+                    
+                    classIcon = new Image(Icons.get(info.heroClass));
+                    add(classIcon);
+                    level = new BitmapText(PixelScene.pixelFont);
+                    add(level);
+                } else {
+                    // 이미지가 이미 있으면 내용물만 교체
+                    hero.copy(HeroSprite.avatar(info.heroClass, info.armorTier));
+                    classIcon.copy(Icons.get(info.heroClass));
+                }
 				long diff = Game.realTime - info.lastPlayed;
 				if (diff > 99L * 30 * 24 * 60 * 60_000){
 					lastPlayed.text(" "); //show no text for >99 months ago

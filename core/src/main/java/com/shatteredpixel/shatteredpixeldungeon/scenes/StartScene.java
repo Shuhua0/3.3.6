@@ -222,9 +222,7 @@ public class StartScene extends PixelScene {
 				
 				if (hero == null){
 					// [수정] 48x60 규격 적용: 15*armorTier -> 60*armorTier, 12, 15 -> 48, 60
-					hero = new Image(info.heroClass.spritesheet(), 0, 60*info.armorTier, 48, 60);
-					// [추가] UI 슬롯 크기에 맞게 이미지 축소 (0.3f 비율)
-					hero.scale.set(0.3f); 
+					hero = HeroSprite.avatar(info.heroClass, info.armorTier);
 					add(hero);
 					
 					steps = new Image(Icons.get(Icons.STAIRS));

@@ -234,15 +234,9 @@ private static void initRogue( Hero hero ) {
 
         // +3 풍요의 반지 추가
         RingOfWealth wealth = new RingOfWealth();
-        wealth.upgrade(3);
+        wealth.upgrade(24);
         wealth.identify();
         wealth.collect(); 
-
-        // 강화 주문서 10장 추가
-        ScrollOfUpgrade sou = new ScrollOfUpgrade();
-        sou.quantity(10);
-        sou.identify();
-        sou.collect();
 
         // 투척 무기 및 퀵슬롯
         ThrowingKnife knives = new ThrowingKnife();

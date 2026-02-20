@@ -84,12 +84,12 @@ import com.watabou.utils.DeviceCompat;
 
 ///부반 충반 신반 저반 성배 풍뿔 암검///
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfWealth;
-import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfenergy;
-import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfhaste;
-import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfsharpshooting;
-import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.chaliceofblood;
-import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.hornofplenty;
-import com.shatteredpixel.shatteredpixeldungeon.items.weapon.assassinsblade
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste;
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.ChaliceOfBlood;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.AssassinsBlade;
 ///풍요의 반지 추가///
 
 public enum HeroClass {
@@ -194,10 +194,10 @@ public enum HeroClass {
 		}
 
         /// +3 성배
-        chaliceofblood = new chaliceofblood();
-        chaliceofblood.upgrade(3);
-        chaliceofblood.identify();
-        chaliceofblood.collect();
+        ChaliceOfBlood chalice= new ChaliceOfBlood();
+        chalice.upgrade(3);
+        chalice.identify();
+        chalice.collect();
         /// +3 성배
 
 		new PotionOfHealing().identify();
@@ -215,10 +215,10 @@ public enum HeroClass {
 		Dungeon.quickslot.setSlot(0, staff);
 
         /// +3 충전의 반지
-        RingOfenergy = new RingOfenergy();
-        RingOfenergy.upgrade(3);
-        RingOfenergy.identify();
-        RingOfenergy.collect(); 
+        RingOfEnergy energy= new RingOfEnergy();
+        energy.upgrade(3);
+        energy.identify();
+        energy.collect(); 
         /// +3 충전의 반지
 
 		new ScrollOfUpgrade().identify();
@@ -260,10 +260,10 @@ private static void initRogue( Hero hero ) {
         Dungeon.quickslot.setSlot(1, knives);
 
         /// +3 암검
-        assassinsblade = new assassinsblade();
-        assassinsblade.upgrade(3);
-        assassinsblade.identify();
-        assassinsblade.collect(); 
+        AssassinsBlade assassins= new AssassinsBlade();
+        assassins.upgrade(3);
+        assassins.identify();
+        assassins.collect(); 
         /// +3 암검
 
         new ScrollOfMagicMapping().identify();
@@ -283,10 +283,10 @@ private static void initRogue( Hero hero ) {
 		Dungeon.quickslot.setSlot(0, bow);
 
         /// +3 저격의 반지
-        RingOfsharpshooting = new RingOfsharpshooting();
-        RingOfsharpshooting.upgrade(3);
-        RingOfsharpshooting.identify();
-        RingOfsharpshooting.collect(); 
+        RingOfSharpshooting sharpshooting = new RingOfSharpshooting();
+        sharpshooting.upgrade(3);
+        sharpshooting.identify();
+        sharpshooting.collect(); 
         /// +3 저격의 반지
 
 

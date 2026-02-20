@@ -82,6 +82,10 @@ import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.watabou.utils.DeviceCompat;
 
+///풍요의 반지 추가///
+import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfWealth;
+///풍요의 반지 추가///
+
 public enum HeroClass {
 
 	WARRIOR( HeroSubClass.BERSERKER, HeroSubClass.GLADIATOR ),
@@ -200,23 +204,60 @@ public enum HeroClass {
 		new ScrollOfUpgrade().identify();
 		new PotionOfLiquidFlame().identify();
 	}
+/// 원본 임시 삭제 ///
+///	private static void initRogue( Hero hero ) {
+///		(hero.belongings.weapon = new Dagger()).identify();
 
-	private static void initRogue( Hero hero ) {
-		(hero.belongings.weapon = new Dagger()).identify();
+///		CloakOfShadows cloak = new CloakOfShadows();
+///		(hero.belongings.artifact = cloak).identify();
+///		hero.belongings.artifact.activate( hero );
 
-		CloakOfShadows cloak = new CloakOfShadows();
-		(hero.belongings.artifact = cloak).identify();
-		hero.belongings.artifact.activate( hero );
+///		ThrowingKnife knives = new ThrowingKnife();
+///		knives.identify().collect();
+///
+///		Dungeon.quickslot.setSlot(0, cloak);
+///		Dungeon.quickslot.setSlot(1, knives);
+///
+///		new ScrollOfMagicMapping().identify();
+///		new PotionOfInvisibility().identify();
+///	}
+///
+/// 하단 풍요반지 +강줌 ///
+private static void initRogue( Hero hero ) {
+        // 기본 무기
+        (hero.belongings.weapon = new Dagger()).identify();
 
-		ThrowingKnife knives = new ThrowingKnife();
-		knives.identify().collect();
+        // 망토 설정
+        CloakOfShadows cloak = new CloakOfShadows();
+        (hero.belongings.artifact = cloak).identify();
+        hero.belongings.artifact.activate( hero );
 
-		Dungeon.quickslot.setSlot(0, cloak);
-		Dungeon.quickslot.setSlot(1, knives);
+        // +3 풍요의 반지 추가
+        RingOfWealth wealth = new RingOfWealth();
+        wealth.upgrade(3);
+        wealth.identify();
+        wealth.collect(); 
 
-		new ScrollOfMagicMapping().identify();
-		new PotionOfInvisibility().identify();
-	}
+        // 강화 주문서 10장 추가
+        ScrollOfUpgrade sou = new ScrollOfUpgrade();
+        sou.quantity(10);
+        sou.identify();
+        sou.collect();
+
+        // 투척 무기 및 퀵슬롯
+        ThrowingKnife knives = new ThrowingKnife();
+        knives.identify().collect();
+
+        Dungeon.quickslot.setSlot(0, cloak);
+        Dungeon.quickslot.setSlot(1, knives);
+
+        new ScrollOfMagicMapping().identify();
+        new PotionOfInvisibility().identify();
+    }
+///
+
+
+
 
 	private static void initHuntress( Hero hero ) {
 

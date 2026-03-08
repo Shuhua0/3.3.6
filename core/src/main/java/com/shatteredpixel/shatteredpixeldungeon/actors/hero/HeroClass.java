@@ -90,7 +90,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.ChaliceOfBlood;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.AssassinsBlade;
-import com.shatteredpixel.shatteredpixeldungeon.items.scroll.ScrollOfTransmutation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation;
 ///풍요의 반지 추가///
 
 public enum HeroClass {
@@ -201,8 +201,9 @@ public enum HeroClass {
         chalice.collect();
 
 		ScrollOfTransmutation Transmutation	= new ScrollOfTransmutation();
+		transmutation.quantity(30);
 		Transmutation.identify();
-		Transmutation.collect(10);
+		Transmutation.collect();
         /// +3 성배
 
 		new PotionOfHealing().identify();
@@ -226,8 +227,9 @@ public enum HeroClass {
         energy.collect(); 
 
 		ScrollOfTransmutation Transmutation	= new ScrollOfTransmutation();
+		transmutation.quantity(30);
 		Transmutation.identify();
-		Transmutation.collect(10);
+		Transmutation.collect();
         /// +3 충전의 반지
 
 		new ScrollOfUpgrade().identify();
@@ -275,8 +277,9 @@ private static void initRogue( Hero hero ) {
         assassins.collect(); 
 
 		ScrollOfTransmutation Transmutation	= new ScrollOfTransmutation();
+		transmutation.quantity(30);
 		Transmutation.identify();
-		Transmutation.collect(10);
+		Transmutation.collect();
         /// +3 암검
 
         new ScrollOfMagicMapping().identify();
@@ -302,8 +305,9 @@ private static void initRogue( Hero hero ) {
         sharpshooting.collect(); 
 
 		ScrollOfTransmutation Transmutation	= new ScrollOfTransmutation();
+		transmutation.quantity(30);
 		Transmutation.identify();
-		Transmutation.collect(10);
+		Transmutation.collect();
         /// +3 저격의 반지
 
 

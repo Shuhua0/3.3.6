@@ -200,10 +200,10 @@ public enum HeroClass {
         chalice.identify();
         chalice.collect();
 
-		ScrollOfTransmutation Transmutation	= new ScrollOfTransmutation();
+		ScrollOfTransmutation transmutation	= new ScrollOfTransmutation();
 		transmutation.quantity(30);
-		Transmutation.identify();
-		Transmutation.collect();
+		transmutation.identify();
+		transmutation.collect();
         /// +3 성배
 
 		new PotionOfHealing().identify();
@@ -226,10 +226,10 @@ public enum HeroClass {
         energy.identify();
         energy.collect(); 
 
-		ScrollOfTransmutation Transmutation	= new ScrollOfTransmutation();
+		ScrollOfTransmutation transmutation	= new ScrollOfTransmutation();
 		transmutation.quantity(30);
-		Transmutation.identify();
-		Transmutation.collect();
+		transmutation.identify();
+		transmutation.collect();
         /// +3 충전의 반지
 
 		new ScrollOfUpgrade().identify();
@@ -276,10 +276,10 @@ private static void initRogue( Hero hero ) {
         assassins.identify();
         assassins.collect(); 
 
-		ScrollOfTransmutation Transmutation	= new ScrollOfTransmutation();
+		ScrollOfTransmutation transmutation	= new ScrollOfTransmutation();
 		transmutation.quantity(30);
-		Transmutation.identify();
-		Transmutation.collect();
+		transmutation.identify();
+		transmutation.collect();
         /// +3 암검
 
         new ScrollOfMagicMapping().identify();
@@ -304,10 +304,10 @@ private static void initRogue( Hero hero ) {
         sharpshooting.identify();
         sharpshooting.collect(); 
 
-		ScrollOfTransmutation Transmutation	= new ScrollOfTransmutation();
+		ScrollOfTransmutation transmutation	= new ScrollOfTransmutation();
 		transmutation.quantity(30);
-		Transmutation.identify();
-		Transmutation.collect();
+		transmutation.identify();
+		transmutation.collect();
         /// +3 저격의 반지
 
 
